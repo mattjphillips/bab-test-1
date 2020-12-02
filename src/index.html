@@ -12,6 +12,7 @@
                 height: 100%;
                 margin: 0;
                 padding: 0;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
             }
 
             #renderCanvas {
@@ -19,10 +20,26 @@
                 height: 100%;
                 touch-action: none;
             }
+
+            #controls {
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                height: 4em;
+                background: lightblue;
+                padding: 10px;
+            }
         </style>
     </head>
 <body>
     <canvas id="renderCanvas"></canvas>
+    <div id="controls">
+        <input id="rock-camera" type="checkbox"><label for="rock-camera">Rock Camera</label>
+        <input id="animate-text" type="checkbox"><label for="animate-text">Animate Text</label>
+        <input id="vary-finish" type="checkbox"><label for="vary-finish">Vary Finish</label>
+        <p>Note: you can manipulate the view with the mouse, and you can also type to change the text.</p>
+    </div>
     <script src="bundle.js"></script>
 </body>
 </html>
