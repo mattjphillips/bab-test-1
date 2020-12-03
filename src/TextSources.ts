@@ -1,5 +1,5 @@
 
-export const SHORT_PHRASE = "Once upon a time there was an island in the middle of the pacific ocean.";
+export const SHORT_PHRASE = "Once upon a time there was an island in the middle of the Pacific Ocean.";
 
 // 272 words, about half a page of text
 export const GETTYSBURG_ADDRESS = 
