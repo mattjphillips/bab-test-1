@@ -127,7 +127,7 @@ export class PolygonWithHoles extends Shape {
         const mesh: IMesh3D = { id: key, xform, points: [], indices: [] };
 
         this.createFrontMesh(mesh, bevel * depth, z2);
-        //this.createBackMesh(mesh, 0, z0); // optional
+        this.createBackMesh(mesh, 0, z0); // most of time don't need back, but some animations expose it
 
         if (depth > 0) {
             this.createSideMesh(mesh, 0, z0, z2);

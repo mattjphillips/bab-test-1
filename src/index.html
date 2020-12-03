@@ -48,11 +48,11 @@
         <select id="color-select">
             <option value="1.0, 0.766, 0.336" selected>Gold</option>
             <option value="1,1,1">Silver</option>
-            <option value="1,0,0">Red</option>
+            <option value="0.9,0.0,0.0">Red</option>
             <option value="1,1,0">Yellow</option>
             <option value="0,1,0">Green</option>
             <option value="0,1,1">Cyan</option>
-            <option value="0,0,1">Blue</option>
+            <option value="0.1,0.1,0.9">Blue</option>
             <option value="1,0,1">Magenta</option>
         </select>
         
@@ -66,12 +66,20 @@
         </select>
 
         <label style="margin-left:10px" for="fx-select">Effects:</label>
-        <select id="fx-select">
-            <option value="explode" selected>Explode</option>
-            <option value="slide-off">Slide Off</option>
-            <option value="twist-away">Twist-Away</option>
-            <option value="fall-down">Fall Down</option>
-            <option value="zoom">Zoom</option>
+        <select id="fx-out-select">
+            <option value="explode" selected>Out: Explode</option>
+            <option value="slide-off">Out: Slide Off</option>
+            <option value="twist-away">Out: Twist-Away</option>
+            <option value="fall-down">Out: Topple</option>
+            <option value="zoom">Out: Zoom</option>
+        </select>
+        <select id="fx-in-select">
+            <option value="drop-in" selected>In: Drop-from-top</option>
+            <option value="slide-in">In: Slide-in</option>
+            <option value="zoom-in-1">In: Drop-in 1</option>
+            <option value="zoom-in-2">In: Drop-in 2</option>
+            <option value="unexplode">In: Unexplode</option>
+            <option value="typewriter">In: Typewriter</option>
         </select>
         <select id="fx-speed">
             <option value="500">500ms</option>
@@ -81,7 +89,7 @@
         </select>
         <button id="play-effect">Play</button>
         <button id="btn-gettysburg" style="margin-left: 10px">Gettysburg Text</button>
-        <p style="font-size: 70%">Note: you can click on the text and type to edit it (sorry, no cursor control).</p>
+        <p style="font-size: 70%">Note: you can click on the text and type to edit it (sorry, no selection or insertion caret or anything).</p>
     </div>
     <script src="bundle.js"></script>
 </body>
