@@ -26,7 +26,6 @@
                 left: 0;
                 bottom: 0;
                 right: 0;
-                height: 4em;
                 background: lightblue;
                 padding: 10px;
             }
@@ -44,12 +43,25 @@
         <input id="rock-camera" type="checkbox"><label for="rock-camera">Rock Camera</label>
         <input id="animate-text" type="checkbox"><label for="animate-text">Wave Text</label>
 
+        <input id="extruded" type="checkbox" checked><label for="extruded">Extruded</label>
+
+        <select id="color-select">
+            <option value="1.0, 0.766, 0.336" selected>Gold</option>
+            <option value="1,1,1">Silver</option>
+            <option value="1,0,0">Red</option>
+            <option value="1,1,0">Yellow</option>
+            <option value="0,1,0">Green</option>
+            <option value="0,1,1">Cyan</option>
+            <option value="0,0,1">Blue</option>
+            <option value="1,0,1">Magenta</option>
+        </select>
+        
         <label style="margin-left:10px" for="finish-select">Finish:</label>
         <select id="finish-select">
             <option value="1.0">Matte</option>
             <option value="0.3">Less Shiny</option>
-            <option value="0.2">Shiny</option>
-            <option value="0.1" selected>Very Shiny</option>
+            <option value="0.15" selected>Shiny</option>
+            <option value="0.1">Very Shiny</option>
             <option value="0.0">Mirror</option>
         </select>
 
@@ -68,7 +80,8 @@
             <option value="5000">5s</option>
         </select>
         <button id="play-effect">Play</button>
-        <p>Note: you can manipulate the view with the mouse, and you can also type to change the text.</p>
+        <button id="btn-gettysburg" style="margin-left: 10px">Gettysburg Text</button>
+        <p style="font-size: 70%">Note: you can click on the text and type to edit it (sorry, no cursor control).</p>
     </div>
     <script src="bundle.js"></script>
 </body>

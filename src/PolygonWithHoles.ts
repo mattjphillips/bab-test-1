@@ -12,27 +12,29 @@ export interface Pt3D {
 }
 
 export interface IMesh3D {
+    id: string;
     xform: Transform;
     points: Pt3D[];
     indices: number[];
 }
+
+const meshCache: { [id: string]: IMesh3D[] } = {};
 
 /** A ahape represented by one positive polygon and any number of negative "hole" polygons cut out of it */
 export class PolygonWithHoles extends Shape {
 
     static nextID = 1;
 
-
     static add3dpt(arr: Pt3D[], x: number, y: number, z: number) {
         arr.push({x: -x, y: -y, z: z});
     }
 
-    constructor(public positive: Polygon2D, public holes: Polygon2D[], xform: Transform = Transform.Identity) {
+    constructor(public id: string,public positive: Polygon2D, public holes: Polygon2D[], xform: Transform = Transform.Identity) {
         super(xform);
     }
 
     withXform(xform: Transform): Shape {
-        return new PolygonWithHoles(this.positive, this.holes, xform);
+        return new PolygonWithHoles(this.id, this.positive, this.holes, xform);
     }
 
     static shapeToMesh(mesh: IMesh3D, positive: Polygon2D, holes: Polygon2D[], z: number, reverse: boolean): IMesh3D {
@@ -101,8 +103,17 @@ export class PolygonWithHoles extends Shape {
     }
 
     createMeshes(depth: number, bevel: number, incomingXform: Transform): IMesh3D[] {
-
         const xform = incomingXform.concat(this.xform);
+
+        const key = `${this.id}-d${depth}`;
+        if (meshCache[key]) {
+            return meshCache[key].map(m => ({ 
+                id: m.id,
+                xform: xform,
+                points: m.points,
+                indices: m.indices
+            }));
+        }
 
         // z of back face
         const z0 = 0;
@@ -113,12 +124,16 @@ export class PolygonWithHoles extends Shape {
 
         const coords3d: Pt3D[] = [];
 
-        const mesh: IMesh3D = { xform, points: [], indices: [] };
+        const mesh: IMesh3D = { id: key, xform, points: [], indices: [] };
 
-        this.createFrontMesh(mesh, bevel * depth, z2), 
-        this.createBackMesh(mesh, 0, z0),
-        this.createSideMesh(mesh, 0, z0, z2)
+        this.createFrontMesh(mesh, bevel * depth, z2);
+        //this.createBackMesh(mesh, 0, z0); // optional
 
+        if (depth > 0) {
+            this.createSideMesh(mesh, 0, z0, z2);
+        }
+
+        meshCache[key] = [mesh];
         return [mesh];
         /*
 

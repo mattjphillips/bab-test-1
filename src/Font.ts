@@ -9,7 +9,7 @@ export class Font {
     private _readyPromise: Promise<Font>;
     private _font: OpenType.Font;
 
-    constructor(public readonly otfURL: string) {
+    constructor(public readonly otfURL: string, public readonly name: string) {
         this._readyPromise = OpenType.load(this.otfURL).then(f => {
             this._font = f;
             return this;
@@ -27,7 +27,7 @@ export class Font {
         
         if (!inf) {
             const path: OpenType.Path = otGlyph.path instanceof OpenType.Path ? otGlyph.path : otGlyph.path();
-            const shape = GlyphPathConverter.shapeForPath(path, 1, 0, 1, 0);
+            const shape = GlyphPathConverter.shapeForPath(`${this.name}-${otGlyph.index}`, path);
             inf = { glyph: otGlyph, shape };
             this.glyphMap[otGlyph.name] = inf;
         }

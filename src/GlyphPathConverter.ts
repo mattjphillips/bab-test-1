@@ -1,10 +1,8 @@
 import * as OpenType from "opentype.js";
 import { Shape, Transform } from "./Shape";
-import { Polygon } from "./Polygon";
 import { IMesh3D, PolygonWithHoles } from "./PolygonWithHoles";
 import { ShapeGroup } from "./ShapeGroup";
-import { Mesh, Scene } from "babylonjs";
-import { Pt } from "./GraphicTypes";
+import { Pt } from "./Pt";
 import { Polygon2D } from "./geometry/Polygon2D";
 import { Point2D } from "./geometry/Point2D";
 
@@ -23,7 +21,7 @@ class EmptyShape extends Shape {
 }
 
 class GlyphPathHelper {
-    constructor(public commands: OpenType.PathCommand[] = []) {
+    constructor(public commands: OpenType.PathCommand[] = [], public readonly unitsPerEm: number) {
     }
 
     isClockwise(invertY: boolean) {
@@ -49,6 +47,9 @@ class GlyphPathHelper {
         }
 
         this.commands.forEach(cmd => {
+            const DETAIL = 100;
+            const MAXPTS = 50;
+
             switch (cmd.type) {
                 case 'M':
                     cur = { x: cmd.x, y: cmd.y };
@@ -60,8 +61,8 @@ class GlyphPathHelper {
                     break;
                 case 'Q':
                     {
-                        // HAAAAACK
-                        const N = 10;
+                        // very crude but more effective than hard coding
+                        const N = Math.min(MAXPTS, Math.ceil(DETAIL * Math.hypot(cur.x - cmd.x, cur.y - cmd.y) / this.unitsPerEm));
                         for (let i = 0; i < N; i++) {
                             const t = (i + 1) / N;
                             const t2 = t * t;
@@ -76,8 +77,8 @@ class GlyphPathHelper {
                     break;
                 case 'C':
                     {
-                        // HAAAAACK
-                        const N = 10;
+                        // very crude but more effective than hard coding
+                        const N = Math.min(MAXPTS, Math.ceil(DETAIL * Math.hypot(cur.x - cmd.x, cur.y - cmd.y) / this.unitsPerEm));
                         for (let i = 0; i < N; i++) {
                             const t = (i + 1) / N;
                             const t2 = t * t;
@@ -112,26 +113,24 @@ interface NestingNode {
 
 export class GlyphPathConverter {
 
-    static shapeForPath(path: OpenType.Path, sx: number, tx: number, sy: number, ty: number): Shape {
+    static shapeForPath(id: string, path: OpenType.Path): Shape {
 
         let paths: GlyphPathHelper[] = [];
         let curPath: GlyphPathHelper = null;
         path.commands.forEach(cmd => {
             if (cmd.type === 'M') {
-                curPath = new GlyphPathHelper([cmd]);
+                curPath = new GlyphPathHelper([cmd], path.unitsPerEm);
                 paths.push(curPath);
             } else if (cmd.type !== 'Z') {
                 curPath.commands.push(cmd);
             }
         });
     
-        const xformPt = (pt: Pt) => new Point2D(pt.x * sx + tx, pt.y * sy + ty);
-
         // Not sure what I can count on here in terms of the way things are drawn in the font.
         // CW and CCW are probably a safe bet to indicate sign, but the order of operations can vary
         // so we don't actually know what the polarity is. 
 
-        const nodes: NestingNode[] = paths.map(gp => ({ poly: gp.expand().map(xformPt), children: [] }));
+        const nodes: NestingNode[] = paths.map(gp => ({ poly: gp.expand(), children: [] }));
         nodes.sort((a, b) => b.poly.area - a.poly.area);
 
         const roots: NestingNode[] = [];
@@ -154,7 +153,7 @@ export class GlyphPathConverter {
         const shapes: Shape[] = [];
 
         const buildPositive = (node: NestingNode) => {
-            shapes.push(new PolygonWithHoles(node.poly.makeCW(), node.children.map(child => child.poly.makeCCW())));
+            shapes.push(new PolygonWithHoles(`${id}-${shapes.length}`, node.poly.makeCW(), node.children.map(child => child.poly.makeCCW())));
             node.children.forEach(hole => hole.children.forEach(pos => buildPositive(pos)));
         };
 
