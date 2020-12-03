@@ -1,9 +1,6 @@
-import { Mesh, PolygonMeshBuilder, Scene, Vector2, Vector3, VertexData } from "babylonjs";
 import Earcut from "earcut";
-import { Pt } from "./GraphicTypes";
 import { Point2D } from "./geometry/Point2D";
 import { Shape, Transform } from "./Shape";
-import { pbr, grass1 } from "./index";
 import { Polygon2D } from "./geometry/Polygon2D";
 
 const PolygonOffset = require("polygon-offset");
@@ -15,6 +12,7 @@ export interface Pt3D {
 }
 
 export interface IMesh3D {
+    xform: Transform;
     points: Pt3D[];
     indices: number[];
 }
@@ -37,17 +35,13 @@ export class PolygonWithHoles extends Shape {
         return new PolygonWithHoles(this.positive, this.holes, xform);
     }
 
-    static shapeToMesh(mesh: IMesh3D, positive: Polygon2D, holes: Polygon2D[], z: number, xform: Transform, reverse: boolean): IMesh3D {
+    static shapeToMesh(mesh: IMesh3D, positive: Polygon2D, holes: Polygon2D[], z: number, reverse: boolean): IMesh3D {
 
         const coords2d: number[] = [];
         const baseIndex = mesh.points.length;
         
         const add3dpt = (pt: Point2D) => {
-            mesh.points.push({ 
-                x: pt.x * xform.scale + xform.tx, 
-                y: pt.y * xform.scale + xform.ty,
-                z: z * xform.scale + xform.tz 
-            });
+            mesh.points.push({ x: pt.x, y: pt.y, z })
         }
 
         const addPts = (poly: Polygon2D) => {
@@ -75,23 +69,19 @@ export class PolygonWithHoles extends Shape {
         return mesh;
     }
 
-    createFrontMesh(mesh: IMesh3D, inset: number, z: number, xform: Transform) {
-        PolygonWithHoles.shapeToMesh(mesh, this.positive, this.holes, z, xform, false);
+    createFrontMesh(mesh: IMesh3D, inset: number, z: number) {
+        PolygonWithHoles.shapeToMesh(mesh, this.positive, this.holes, z, false);
     }
 
-    createBackMesh(mesh: IMesh3D, inset: number, z: number, xform: Transform) {
-        PolygonWithHoles.shapeToMesh(mesh, this.positive, this.holes, z, xform, true);
+    createBackMesh(mesh: IMesh3D, inset: number, z: number) {
+        PolygonWithHoles.shapeToMesh(mesh, this.positive, this.holes, z, true);
     }
 
-    createSideMesh(mesh: IMesh3D, inset: number, zFront: number, zBack: number, xform: Transform) {
+    createSideMesh(mesh: IMesh3D, inset: number, zFront: number, zBack: number) {
         let i = 0;
 
         const add3dpt = (pt: Point2D, z: number) => {
-            mesh.points.push({ 
-                x: pt.x * xform.scale + xform.tx, 
-                y: pt.y * xform.scale + xform.ty,
-                z: z * xform.scale + xform.tz 
-            });
+            mesh.points.push({ x: pt.x, y: pt.y, z })
         }
 
         const addShape = (poly: Polygon2D) => {
@@ -123,11 +113,11 @@ export class PolygonWithHoles extends Shape {
 
         const coords3d: Pt3D[] = [];
 
-        const mesh: IMesh3D = { points: [], indices: [] };
+        const mesh: IMesh3D = { xform, points: [], indices: [] };
 
-        this.createFrontMesh(mesh, bevel * depth, z2, xform), 
-        this.createBackMesh(mesh, 0, z0, xform),
-        this.createSideMesh(mesh, 0, z0, z2, xform)
+        this.createFrontMesh(mesh, bevel * depth, z2), 
+        this.createBackMesh(mesh, 0, z0),
+        this.createSideMesh(mesh, 0, z0, z2)
 
         return [mesh];
         /*

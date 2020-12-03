@@ -35,9 +35,39 @@
 <body>
     <canvas id="renderCanvas"></canvas>
     <div id="controls">
+        <select id="font-select">
+            <option value="adobe-clean-bold" selected>Adobe Clean Bold</option>
+            <option value="amatic-sc-bold">Amatic SC Bold</option>
+            <option value="lobster-regular">Lobster Regular</option>
+            <option value="pacifico-regular">Pacifico Regular</option>
+        </select>
         <input id="rock-camera" type="checkbox"><label for="rock-camera">Rock Camera</label>
-        <input id="animate-text" type="checkbox"><label for="animate-text">Animate Text</label>
-        <input id="vary-finish" type="checkbox"><label for="vary-finish">Vary Finish</label>
+        <input id="animate-text" type="checkbox"><label for="animate-text">Wave Text</label>
+
+        <label style="margin-left:10px" for="finish-select">Finish:</label>
+        <select id="finish-select">
+            <option value="1.0">Matte</option>
+            <option value="0.3">Less Shiny</option>
+            <option value="0.2">Shiny</option>
+            <option value="0.1" selected>Very Shiny</option>
+            <option value="0.0">Mirror</option>
+        </select>
+
+        <label style="margin-left:10px" for="fx-select">Effects:</label>
+        <select id="fx-select">
+            <option value="explode" selected>Explode</option>
+            <option value="slide-off">Slide Off</option>
+            <option value="twist-away">Twist-Away</option>
+            <option value="fall-down">Fall Down</option>
+            <option value="zoom">Zoom</option>
+        </select>
+        <select id="fx-speed">
+            <option value="500">500ms</option>
+            <option value="1000" selected>1s</option>
+            <option value="2000">2s</option>
+            <option value="5000">5s</option>
+        </select>
+        <button id="play-effect">Play</button>
         <p>Note: you can manipulate the view with the mouse, and you can also type to change the text.</p>
     </div>
     <script src="bundle.js"></script>

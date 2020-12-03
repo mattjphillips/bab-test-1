@@ -58,21 +58,39 @@ class GlyphPathHelper {
                     cur = { x: cmd.x, y: cmd.y };
                     addPt(cur);
                     break;
-                case 'C':
-                    // HAAAAACK
-                    const N = 10;
-                    for (let i = 0; i < N; i++) {
-                        const t = (i + 1) / N;
-                        const t2 = t * t;
-                        const t3 = t2 * t;
-                        const tm = 1 - t;
-                        const tm2 = tm * tm;
-                        const tm3 = tm2 * tm;
-                        const x = tm3 * cur.x + 3 * tm2 * t * cmd.x1 + 3 * tm * t2 * cmd.x2 + t3 * cmd.x;
-                        const y = tm3 * cur.y + 3 * tm2 * t * cmd.y1 + 3 * tm * t2 * cmd.y2 + t3 * cmd.y;
-                        addPt({ x, y });
+                case 'Q':
+                    {
+                        // HAAAAACK
+                        const N = 10;
+                        for (let i = 0; i < N; i++) {
+                            const t = (i + 1) / N;
+                            const t2 = t * t;
+                            const omt = (1 - t);
+                            const omt2 = omt * omt;
+                            const x = omt2 * cur.x + 2 * omt * t * cmd.x1 + t2 * cmd.x;
+                            const y = omt2 * cur.y + 2 * omt * t * cmd.y1 + t2 * cmd.y;
+                            addPt({ x, y });
+                        }
+                        cur = { x: cmd.x, y: cmd.y };
                     }
-                    cur = { x: cmd.x, y: cmd.y };
+                    break;
+                case 'C':
+                    {
+                        // HAAAAACK
+                        const N = 10;
+                        for (let i = 0; i < N; i++) {
+                            const t = (i + 1) / N;
+                            const t2 = t * t;
+                            const t3 = t2 * t;
+                            const tm = 1 - t;
+                            const tm2 = tm * tm;
+                            const tm3 = tm2 * tm;
+                            const x = tm3 * cur.x + 3 * tm2 * t * cmd.x1 + 3 * tm * t2 * cmd.x2 + t3 * cmd.x;
+                            const y = tm3 * cur.y + 3 * tm2 * t * cmd.y1 + 3 * tm * t2 * cmd.y2 + t3 * cmd.y;
+                            addPt({ x, y });
+                        }
+                        cur = { x: cmd.x, y: cmd.y };
+                    }
                     break;
                 case 'Z':
                     break;
@@ -83,6 +101,11 @@ class GlyphPathHelper {
 
         return new Polygon2D(pts.map(p => new Point2D(p.x, p.y)));
     }
+}
+
+interface NestingNode {
+    poly: Polygon2D;
+    children: NestingNode[];
 }
 
 /** Helper class that turns paths coming from fonts into shapes */
@@ -101,28 +124,49 @@ export class GlyphPathConverter {
                 curPath.commands.push(cmd);
             }
         });
-
-        let positives: Polygon2D[] = [];
-        let holes: Polygon2D[] = [];
     
         const xformPt = (pt: Pt) => new Point2D(pt.x * sx + tx, pt.y * sy + ty);
 
-        paths.forEach(path => {
-            if (path.isClockwise(true))
-                positives.push(path.expand().map(xformPt));
-            else
-                holes.push(path.expand().map(xformPt));
+        // Not sure what I can count on here in terms of the way things are drawn in the font.
+        // CW and CCW are probably a safe bet to indicate sign, but the order of operations can vary
+        // so we don't actually know what the polarity is. 
+
+        const nodes: NestingNode[] = paths.map(gp => ({ poly: gp.expand().map(xformPt), children: [] }));
+        nodes.sort((a, b) => b.poly.area - a.poly.area);
+
+        const roots: NestingNode[] = [];
+
+        nodes.forEach((node, i) => {
+            for(let j = i - 1; ; j--) {
+                if (j < 0) {
+                    // no inclusion, start a new group
+                    roots.push(node);
+                    break;
+                }
+                const larger = nodes[j];
+                if (larger.poly.intersectsPoly(node.poly)) {
+                    larger.children.push(node);
+                    break;
+                } 
+            }
         });
+        
+        const shapes: Shape[] = [];
 
-        if (positives.length > 1) { // eg, i or j
-            return new ShapeGroup(positives.map(p => new PolygonWithHoles(p, [])));
-        }
+        const buildPositive = (node: NestingNode) => {
+            shapes.push(new PolygonWithHoles(node.poly.makeCW(), node.children.map(child => child.poly.makeCCW())));
+            node.children.forEach(hole => hole.children.forEach(pos => buildPositive(pos)));
+        };
 
-        if (positives.length == 0) { // eg whitespace
+        roots.forEach(node => buildPositive(node));
+
+        if (shapes.length === 0) {
             return new EmptyShape();
         }
-
-        return new PolygonWithHoles(positives[0], holes);
+        if (shapes.length === 1) {
+            return shapes[0];
+        }
+        return new ShapeGroup(shapes);
     }
 
 }
