@@ -252,7 +252,7 @@ async function start() {
     let text = "Once upon a time there was an island in the middle of the pacific ocean.";
     
     function flowText(text: string): string[] {
-        maxChars = Math.max(20, 2 * Math.floor(Math.sqrt(text.length)));
+        maxChars = Math.min(80, Math.max(20, 2 * Math.floor(Math.sqrt(text.length))));
         left = maxChars * -2;
         const lines: string[] = [];
         const paragraphs = text.split("\n");
@@ -420,7 +420,11 @@ async function start() {
     }
 
     btnGettysburg.onclick = evt => {
-        text = gettysburg;
+        if (text.startsWith(gettysburg)) {
+            text = text + "\n" + gettysburg;
+        } else {
+            text = gettysburg;
+        }
         renderText(text);
     }    
 }
